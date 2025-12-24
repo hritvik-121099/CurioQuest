@@ -1,3 +1,4 @@
+#!/usr/bin/env markdown
 # 🧠 CurioQuest - Where Curiosity Never Dies!
 
 A modern, interactive General Knowledge Quiz web application with a beautiful UI, dark/light mode, daily challenges, and achievement tracking.
@@ -133,13 +134,12 @@ The app stores user data locally using browser localStorage:
 Published on GitHub Pages for free, public access.
 
 ## 📝 Notes
-- For demo purposes, OTP is always **123456**
+- The app now generates real 6-digit OTP codes for login (demo alerts are shown locally)
 - All data is stored in browser's localStorage
 - No server required
-- Works offline after first load
 
 ## 🎓 Learning Features
-- SVG-based educational images
+- Real images and educational content
 - Trivia and fun facts for every question
 - Related information for both correct and incorrect answers
 - Achievement milestones to encourage learning
