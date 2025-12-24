@@ -583,7 +583,7 @@ function updateCompletedSections() {
     
     document.querySelectorAll('.section-card').forEach(card => {
         const sectionName = card.dataset.section;
-        const difficulties = ['Beginner', 'Pro', 'Master'];
+        const difficulties = ['Beginner', 'Pro', 'Expert'];
         let allCompleted = true;
         
         for (let difficulty of difficulties) {
@@ -685,6 +685,17 @@ function showQuizPage(section, difficulty) {
 
     const question = quizData[section][difficulty];
     document.getElementById('questionText').textContent = question.question;
+    // Show question image if present
+    const qImg = document.getElementById('questionImage');
+    if (qImg) {
+        if (question.image) {
+            qImg.src = question.image;
+            qImg.style.display = 'block';
+        } else {
+            qImg.style.display = 'none';
+            qImg.src = '';
+        }
+    }
 
     question.options.forEach((option, index) => {
         document.getElementById(`option${index}`).textContent = option;
@@ -825,24 +836,14 @@ function showResult(isCorrect, question) {
     // Clear any previous timeouts
     clearTimeout(window.resultTimeout);
 
-    if (isCorrect) {
-        createConfetti();
-        // After 5 seconds, auto-redirect (unless user clicks back)
-        window.resultTimeout = setTimeout(() => {
-            if (!resultPopup.classList.contains('hidden')) {
-                resultPopup.classList.add('hidden');
-                closeResultAndGoToMenu();
-            }
-        }, 5000);
-    } else {
-        // After 3 seconds, auto-redirect (unless user clicks back)
-        window.resultTimeout = setTimeout(() => {
-            if (!resultPopup.classList.contains('hidden')) {
-                resultPopup.classList.add('hidden');
-                closeResultAndGoToMenu();
-            }
-        }, 3000);
-    }
+    // Always give user more time to enjoy trivia (30s). Back/Next will cancel this timeout.
+    createConfetti();
+    window.resultTimeout = setTimeout(() => {
+        if (!resultPopup.classList.contains('hidden')) {
+            resultPopup.classList.add('hidden');
+            closeResultAndGoToMenu();
+        }
+    }, 30000);
 }
 
 function closeResultAndGoToMenu() {
@@ -870,12 +871,12 @@ function createConfetti() {
         confetti.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height - canvas.height,
-            width: Math.random() * 10 + 5,
-            height: Math.random() * 10 + 5,
-            opacity: Math.random() * 0.5 + 0.5,
-            vx: Math.random() * 8 - 4,
-            vy: Math.random() * 15 + 5,
-            color: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#0ea5e9'][Math.floor(Math.random() * 5)]
+            width: Math.random() * 12 + 7,
+            height: Math.random() * 12 + 7,
+            opacity: Math.random() * 0.3 + 0.85,
+            vx: Math.random() * 6 - 3,
+            vy: Math.random() * 8 + 4,
+            color: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#0ea5e9', '#ef4444'][Math.floor(Math.random() * 6)]
         });
     }
 
@@ -900,7 +901,7 @@ function createConfetti() {
             }
         });
 
-        if (confetti.length > 0 && Date.now() - startTime < 5000) {
+        if (confetti.length > 0 && Date.now() - startTime < 8000) {
             animationFrameId = requestAnimationFrame(animate);
         } else {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -933,7 +934,8 @@ function loadTriviaOfTheDay() {
 
 function shareTrivia() {
     const triviaText = document.getElementById('triviaText').textContent;
-    const shareText = `🧠 CurioQuest - Trivia of the Day 🧠\n\n${triviaText}\n\nJoin me in expanding our knowledge! 🌟\n\n👉 Play CurioQuest: [YOUR_GAME_URL]`;
+    const gameUrl = getGameUrl();
+    const shareText = `🧠 CurioQuest - Trivia of the Day 🧠\n\n${triviaText}\n\nJoin me in expanding our knowledge! 🌟\n\n👉 Play CurioQuest: ${gameUrl}`;
 
     const encodedText = encodeURIComponent(shareText);
     window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
@@ -1013,10 +1015,22 @@ function shareAnalytics() {
     const stats = currentUser.stats;
     const successRate = stats.totalAttempts > 0 ? Math.round((stats.totalCorrect / stats.totalAttempts) * 100) : 0;
 
-    const shareText = `🧠 CurioQuest - My Analytics 📊\n\n✅ Success Rate: ${successRate}%\n📈 Total Attempts: ${stats.totalAttempts}\n🎯 Correct Answers: ${stats.totalCorrect}\n🏆 Achievements: ${stats.achievements.length}\n\nBeat my score! Play CurioQuest: [YOUR_GAME_URL]`;
+    const gameUrl = getGameUrl();
+    const shareText = `🧠 CurioQuest - My Analytics 📊\n\n✅ Success Rate: ${successRate}%\n📈 Total Attempts: ${stats.totalAttempts}\n🎯 Correct Answers: ${stats.totalCorrect}\n🏆 Achievements: ${stats.achievements.length}\n\nBeat my score! Play CurioQuest: ${gameUrl}`;
 
     const encodedText = encodeURIComponent(shareText);
     window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
+}
+
+// Returns the shareable game URL: prefer configured `CURIO_GAME_URL`, else current page URL
+function getGameUrl() {
+    try {
+        if (window.CURIO_GAME_URL) return window.CURIO_GAME_URL;
+        // Use origin + pathname to avoid including query/hash unless desired
+        return window.location.origin + window.location.pathname;
+    } catch (e) {
+        return 'https://curioquest.example/';
+    }
 }
 
 // ============ Main Menu Updates ============
