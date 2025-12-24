@@ -5,3 +5,12 @@ node_modules/
 .vscode/
 dist/
 build/
+
+# Server
+/server/node_modules/
+
+# Environment examples
+.env.example
+
+# Editor
+.idea/
