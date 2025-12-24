@@ -244,14 +244,65 @@ function generateOTP() {
 }
 
 function sendOTP(email, mobile) {
-    generatedOTP = generateOTP();
+    // Use existing generatedOTP if present (handleLogin already creates one), otherwise create
+    if (!generatedOTP) generatedOTP = generateOTP();
+    // persist to localStorage so verification can read it
+    localStorage.setItem('curioOTP', generatedOTP);
+
     console.log(`OTP for ${email || mobile}: ${generatedOTP}`);
-    
-    // In production, this would call a backend service to send SMS/Email
-    // For demo purposes, we show the OTP in console and alert
-    alert(`Demo: OTP sent to ${email || mobile}\n\nOTP: ${generatedOTP}\n\n(In production, SMS/Email would be sent)`);
-    
+
+    // Try to send via backend OTP server. If not available, fall back to demo alert.
+    const payload = { email, mobile, otp: generatedOTP };
+    // Default local server; replace with your deployed server URL when available
+    const serverUrl = window.CURIO_OTP_SERVER_URL || 'http://localhost:3000/send-otp';
+
+    fetch(serverUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(res => res.json()).then(data => {
+        if (data && data.success) {
+            alert(`OTP sent via ${data.provider || 'server'}. Check your ${email ? 'email' : 'phone'}.`);
+        } else {
+            // server didn't send; fallback
+            showDemoOTP(generatedOTP, 'Server did not send — showing demo OTP');
+            console.warn('OTP server response:', data);
+        }
+    }).catch(err => {
+        // network or CORS issues; fallback to demo alert
+        console.error('OTP server error', err);
+        showDemoOTP(generatedOTP, `Server error: ${err.message}`);
+    });
+
     return generatedOTP;
+}
+
+// Show demo OTP inside the page and enable autofill button
+function showDemoOTP(otp, note) {
+    try {
+        const display = document.getElementById('demoOtpDisplay');
+        const valueEl = document.getElementById('demoOtpValue');
+        const autoBtn = document.getElementById('autofillOtpBtn');
+        if (display && valueEl) {
+            valueEl.textContent = otp;
+            display.classList.remove('hidden');
+            if (note) display.title = note;
+        }
+
+        if (autoBtn) {
+            autoBtn.onclick = () => {
+                const digits = otp.split('');
+                const inputs = document.querySelectorAll('.otp-input');
+                inputs.forEach((input, i) => { input.value = digits[i] || ''; });
+                // focus verify button
+                const verifyBtn = document.querySelector('#otpFormEl button[type="submit"]');
+                if (verifyBtn) verifyBtn.focus();
+            };
+        }
+    } catch (e) {
+        console.warn('showDemoOTP error', e);
+        alert(`Demo OTP: ${otp}`);
+    }
 }
 
 // ============ Initialize App ============
@@ -486,6 +537,8 @@ function resetLogin() {
     document.getElementById('loginFormEl').style.pointerEvents = 'auto';
     document.getElementById('otpSection').classList.add('hidden');
     document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+    const display = document.getElementById('demoOtpDisplay');
+    if (display) display.classList.add('hidden');
 }
 
 function resetAuthForms() {
