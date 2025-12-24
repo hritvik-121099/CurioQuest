@@ -85,21 +85,21 @@ const quizData = {
             options: ["Bill Gates", "Steve Jobs", "Tim Berners-Lee", "Alan Turing"],
             correct: 2,
             trivia: "Tim Berners-Lee invented the World Wide Web in 1989 while working at CERN, a physics research organization in Switzerland.",
-            image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop"
+            image: "https://images.unsplash.com/photo-1518779578993-ec3579fee39f?w=800&h=600&fit=crop"
         },
         Pro: {
             question: "What does HTTP stand for?",
             options: ["High Transfer Text Protocol", "HyperText Transfer Protocol", "Home Terminal Transfer Protocol", "Hyperlink Text Transfer Process"],
             correct: 1,
             trivia: "HTTP is the protocol used to transfer data across the internet, forming the foundation of data communication for the World Wide Web.",
-            image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop"
+            image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=600&fit=crop"
         },
         Expert: {
             question: "What does GPU stand for?",
             options: ["General Processing Unit", "Graphics Processing Unit", "Global Processor Utility", "General Purpose Uplink"],
             correct: 1,
             trivia: "A GPU is specialized hardware designed for rapid mathematical calculations, crucial for graphics rendering and modern AI applications.",
-            image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop"
+            image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=600&fit=crop"
         }
     },
     Sports: {
@@ -122,7 +122,7 @@ const quizData = {
             options: ["147", "180", "200", "225"],
             correct: 0,
             trivia: "A maximum break of 147 in snooker is achieved by potting all 15 red balls followed by the black ball, and then potting all colored balls in sequence.",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23006400' width='200' height='200'/%3E%3Crect x='30' y='40' width='140' height='120' fill='%23228B22' stroke='%23FFF' stroke-width='2'/%3E%3Ccircle cx='100' cy='100' r='8' fill='%23FFF'/%3E%3C/svg%3E"
+            image: "https://images.unsplash.com/photo-1505842465776-3b0d0d5f0a30?w=800&h=600&fit=crop"
         }
     },
     Business: {
@@ -131,24 +131,43 @@ const quizData = {
             options: ["Microsoft", "Apple", "Google", "Amazon"],
             correct: 1,
             trivia: "'Think Different' was Apple's famous advertising slogan used from 1997 to 2002, celebrating innovative individuals.",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23555555' width='200' height='200'/%3E%3Ccircle cx='100' cy='100' r='50' fill='%23000'/%3E%3Ccircle cx='100' cy='100' r='40' fill='%23555555'/%3E%3Cpath d='M 95 80 Q 100 75 105 80 L 105 120 Q 100 125 95 120 Z' fill='%23000'/%3E%3C/svg%3E"
+            image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&h=600&fit=crop"
         },
         Pro: {
             question: "What does IPO stand for?",
             options: ["Initial Product Offer", "Initial Public Offering", "Integrated Product Operation", "International Purchase Order"],
             correct: 1,
             trivia: "An IPO is when a private company first offers its shares to the public on a stock exchange.",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%234A90E2' width='200' height='200'/%3E%3Ctext x='40' y='130' font-size='60' fill='%23FFF' font-weight='bold'%3EIPO%3C/text%3E%3C/svg%3E"
+            image: "https://images.unsplash.com/photo-1515165562835-c4c4a0b81f4f?w=800&h=600&fit=crop"
         },
         Expert: {
             question: "Which economist is famous for the theory of 'invisible hand'?",
             options: ["John Maynard Keynes", "Adam Smith", "Milton Friedman", "Thomas Piketty"],
             correct: 1,
             trivia: "Adam Smith introduced the concept of the 'invisible hand' in 1776, suggesting that individuals pursuing self-interest inadvertently benefit society.",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23DAA520' width='200' height='200'/%3E%3Ccircle cx='100' cy='80' r='30' fill='%23F5DEB3'/%3E%3Cpath d='M 70 110 L 90 160 M 130 110 L 110 160 M 80 130 L 120 130' stroke='%23333' stroke-width='3' fill='none'/%3E%3C/svg%3E"
+            image: "https://images.unsplash.com/photo-1508385082359-f7c9a9b7f9d5?w=800&h=600&fit=crop"
         }
     }
 };
+
+// Ensure daily trivia refreshes after midnight even if user stays on the page
+function setupTriviaResetWatcher() {
+    function scheduleNext() {
+        const now = new Date();
+        const midnight = new Date();
+        midnight.setDate(midnight.getDate() + 1);
+        midnight.setHours(0, 0, 0, 0);
+        const ms = midnight - now + 1000;
+        setTimeout(() => {
+            try {
+                localStorage.removeItem('curioTriviaDate');
+                if (currentUser) loadTriviaOfTheDay();
+            } catch (e) {}
+            scheduleNext();
+        }, ms);
+    }
+    scheduleNext();
+}
 
 // Day-based and section-based puns
 const puns = {
@@ -322,6 +341,8 @@ function initApp() {
     }
 
     setupEventListeners();
+    // Start watcher to refresh daily trivia after midnight
+    try { setupTriviaResetWatcher(); } catch (e) { /* no-op */ }
 }
 
 function setupEventListeners() {
